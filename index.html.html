@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yo gano en la tienda cuando</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #e3f2fd; /* Azul cielo suave basado en la imagen */
+            color: #1e3a5f;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header-banner {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5px;
+            font-size: 1.3rem;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: #0277bd; /* Azul vivo del avión de la imagen */
+            border-bottom: 2px solid #b3e5fc;
+            margin-bottom: 20px;
+        }
+
+        .header-banner .right-text {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #546e7a;
+        }
+
+        .container {
+            display: flex;
+            gap: 25px;
+            max-width: 1200px;
+            width: 100%;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #b3e5fc;
+            box-shadow: 0 4px 25px rgba(2, 119, 189, 0.06);
+        }
+
+        .map-container {
+            flex: 1.4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            max-height: 680px;
+        }
+
+        .fondo-mar {
+            fill: #4fc3f7;
+        }
+        .suelo-tierra {
+            fill: #e1f5fe;
+        }
+        .silueta-edificio {
+            fill: #ffffff;
+            stroke: #0277bd;
+            stroke-width: 1.5;
+        }
+        .linea-arquitectura {
+            fill: none;
+            stroke: #0288d1;
+            stroke-width: 1.2;
+        }
+        .linea-detalle {
+            fill: none;
+            stroke: #b3e5fc;
+            stroke-width: 1px;
+        }
+
+        /* Bloques interactivos */
+        .ladrillo {
+            fill: #ffffff;
+            stroke: #29b6f6;
+            stroke-width: 1.2;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .ladrillo:hover {
+            fill: #e1f5fe;
+            stroke: #01579b;
+            stroke-width: 1.8;
+        }
+
+        .ladrillo.activo {
+            fill: #0288d1;
+            stroke: #01579b;
+            stroke-width: 2;
+            filter: drop-shadow(0px 0px 8px rgba(2, 136, 209, 0.4));
+        }
+
+        .ladrillo-texto {
+            font-size: 14px;
+            font-weight: 600;
+            fill: #0277bd;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+            transition: fill 0.2s;
+        }
+
+        .ladrillo.activo + .ladrillo-texto {
+            fill: #ffffff;
+        }
+
+        /* Panel lateral */
+        .panel-info {
+            flex: 0.8;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e1f5fe;
+            padding-left: 25px;
+            justify-content: flex-start;
+        }
+
+        .panel-info h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 0;
+            color: #01579b;
+        }
+
+        .panel-info p {
+            font-size: 0.85rem;
+            color: #546e7a;
+            line-height: 1.4;
+            margin: 5px 0 15px 0;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 12px;
+            border: 1px solid #b3e5fc;
+            background-color: #f7fcff;
+            border-radius: 6px;
+            resize: none;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: #01579b;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0288d1;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 136, 209, 0.1);
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 14px;
+            background-color: #0288d1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #01579b;
+        }
+
+        button:disabled {
+            background-color: #b0bec5;
+            color: #ffffff;
+            cursor: not-allowed;
+        }
+
+        .contador {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #546e7a;
+            border-top: 1px solid #e1f5fe;
+            padding-top: 15px;
+            font-weight: 500;
+        }
+
+        /* Pop-up (Modal) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(1, 87, 155, 0.3);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #b3e5fc;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 10px 35px rgba(1, 87, 155, 0.12);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1f5fe;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #01579b;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #b0bec5;
+            padding: 0;
+            margin: 0;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover {
+            color: #01579b;
+        }
+
+        .modal-body textarea {
+            height: 200px;
+            background-color: #ffffff;
+            border: 1px solid #b3e5fc;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #0288d1;
+            border: 1px solid #b3e5fc;
+        }
+        .btn-secondary:hover {
+            background-color: #e1f5fe;
+        }
+
+        .footer-links {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 5px;
+            font-size: 0.75rem;
+            color: #546e7a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <div>Yo gano en la tienda cuando...</div>
+        <div class="right-text">48 OBJETIVOS DE OPERACIÓN COMPARTIDOS</div>
+    </div>
+    
+    <div class="container">
+        <!-- Mapa de la Fachada -->
+        <div class="map-container">
+            <svg viewBox="0 0 800 600" id="facade-svg">
+                <rect class="fondo-mar" x="0" y="380" width="800" height="40" />
+                <rect class="suelo-tierra" x="0" y="420" width="800" height="180" />
+                
+                <path d="M 40,430 C 15,380 70,300 45,430 Z" fill="#b3e5fc" opacity="0.7" />
+                <line x1="45" y1="400" x2="45" y2="445" stroke="#0288d1" stroke-width="1.2" />
+                <path d="M 750,430 C 725,380 780,300 755,430 Z" fill="#b3e5fc" opacity="0.7" />
+                <line x1="755" y1="400" x2="755" y2="445" stroke="#0288d1" stroke-width="1.2" />
+
+                <rect class="silueta-edificio" x="180" y="110" width="440" height="340" />
+                <polygon class="silueta-edificio" points="180,110 400,60 620,110" />
+                <line class="linea-arquitectura" x1="180" y1="120" x2="620" y2="120" />
+                <line class="linea-detalle" x1="400" y1="60" x2="400" y2="110" />
+
+                <rect class="silueta-edificio" x="170" y="440" width="460" height="15" />
+                <polygon class="silueta-edificio" points="320,455 340,490 460,490 480,455" />
+                <line class="linea-detalle" x1="330" y1="465" x2="470" y2="465" />
+                <line class="linea-detalle" x1="335" y1="478" x2="465" y2="478" />
+
+                <path class="silueta-edificio" d="M 350,455 L 350,330 A 50,50 0 0,1 450,330 L 450,455 Z" />
+                <path class="linea-arquitectura" d="M 358,455 L 358,335 A 42,42 0 0,1 442,335 L 442,455 Z" />
+                <circle class="linea-arquitectura" cx="400" cy="335" r="24" />
+                <circle class="linea-detalle" cx="400" cy="335" r="8" />
+                <line class="linea-detalle" x1="400" y1="311" x2="400" y2="359" />
+                <line class="linea-detalle" x1="376" y1="335" x2="424" y2="335" />
+                <line class="linea-detalle" x1="383" y1="318" x2="417" y2="352" />
+                <line class="linea-detalle" x1="383" y1="352" x2="417" y2="318" />
+                <rect class="linea-arquitectura" x="375" y="375" width="23" height="80" />
+                <rect class="linea-arquitectura" x="402" y="375" width="23" height="80" />
+
+                <path class="linea-arquitectura" d="M 320,420 L 320,360 A 10,10 0 0,1 340,360 L 340,420 Z" />
+                <path class="linea-arquitectura" d="M 460,420 L 460,360 A 10,10 0 0,1 480,360 L 480,420 Z" />
+
+                <g id="capa-ladrillos"></g>
+            </svg>
+        </div>
+
+        <!-- Panel Lateral -->
+        <div class="panel-info">
+            <h2 id="titulo-espacio">Selecciona una sección</h2>
+            <p>Haz clic sobre cualquiera de los bloques de la fachada para visualizar su definición y objetivos.</p>
+            
+            <textarea id="texto-espacio" disabled placeholder="Haz clic en un ladrillo numerado para habilitar la edición de texto..."></textarea>
+            <button id="btn-guardar" disabled>Guardar en este equipo</button>
+            
+            <div class="contador" id="contador-progreso">Secciones con texto: 48 / 48</div>
+        </div>
+    </div>
+
+    <!-- Pop-up (Modal) -->
+    <div class="modal-overlay" id="modal-bloque">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-titulo">Sección</h2>
+                <button class="close-button" id="btn-cerrar-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="modal-texto-espacio" placeholder="Escribe aquí las condiciones o texto correspondiente..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="btn-cancelar-modal" style="margin-top:0;">Cancelar</button>
+                <button id="btn-guardar-modal" style="margin-top:0;">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-links">
+        <div>About &nbsp;&nbsp;&nbsp;&nbsp; Data Source</div>
+        <div>map.com</div>
+    </div>
+
+    <script>
+        // Los 48 textos ahora están predefinidos directamente en el código base (ideales para compartir en GitHub)
+        const datosFachada = {
+            "ladrillo-1": { nombre: "Sección N° 1", texto: "Disciplina en la ejecución gano la tienda cuando tengo capacidad de convertir los sueños de ventas en planes reales en tiempo, calidad y servicio." },
+            "ladrillo-2": { nombre: "Sección N° 2", texto: "Yo gano en la tienda cuando aporto en el desarrollo de los equipos al llegar a su objetivo." },
+            "ladrillo-3": { nombre: "Sección N° 3", texto: "Yo gano cuando cada inversión realizada traiga el retorno adecuado." },
+            "ladrillo-4": { nombre: "Sección N° 4", texto: "Juntos construimos esta visión en resultados uniendo equipos y capacidades." },
+            "ladrillo-5": { nombre: "Sección N° 5", texto: "No pretendas que los resultados cambien, si sigues haciendo lo mismo." },
+            "ladrillo-6": { nombre: "Sección N° 6", texto: "Yo gano en la tienda cuando aporto mi conocimiento, experiencia y me abro a las ideas de aprender y aplicar todo lo anterior a lograr mi tarea." },
+            "ladrillo-7": { nombre: "Sección N° 7", texto: "Yo gano la tienda cuando llegamos con un producto correcto, a tiempo y al menor costo posible." },
+            "ladrillo-8": { nombre: "Sección N° 8", texto: "Le hago la vida más fácil a la FDV al cliente." },
+            "ladrillo-9": { nombre: "Sección N° 9", texto: "Yo gano la tienda cuando el frío llega primero que la competencia y nos prefieren." },
+            "ladrillo-10": { nombre: "Sección N° 10", texto: "Habilitar las iniciativas de transformación con las mejores herramientas y datos para garantizar ejecución perfecta, construyendo relaciones donde crecemos juntos." },
+            "ladrillo-11": { nombre: "Sección N° 11", texto: "Yo gano en la tienda cuando el Representante tiene todo el portafolio disponible para ofrecer al tendero." },
+            "ladrillo-12": { nombre: "Sección N° 12", texto: "Cuando implemento las iniciativas en las tiendas y valido que las estrategias aportan y son coherentes para garantizar que estamos ganando." },
+            "ladrillo-13": { nombre: "Sección N° 13", texto: "Yo gano en la tienda cuando ofrezco una excelente atención al cliente." },
+            "ladrillo-14": { nombre: "Sección N° 14", texto: "Yo gano en la tienda cuando cada peso invertido logra ganar un espacio adicional en el bolsillo del tendero, que se transforma en ecuación virtuosa." },
+            "ladrillo-15": { nombre: "Sección N° 15", texto: "Yo gano en la tienda cuando desarrollo cada una de las estrategias y se vuelven tangibles y de valor para clientes." },
+            "ladrillo-16": { nombre: "Sección N° 16", texto: "Facilitando que las iniciativas comerciales lleguen a la tienda." },
+            "ladrillo-17": { nombre: "Sección N° 17", texto: "Cuando facilito la toma de pedido y visualización de los productos." },
+            "ladrillo-18": { nombre: "Sección N° 18", texto: "Cuando nuestras aplicaciones funcionan según las necesidades del negocio y cuando damos un buen pedido sugerido al cliente." },
+            "ladrillo-19": { nombre: "Sección N° 19", texto: "Garantizo las apps adecuadas para la gestión comercial de nuestra FV y clientes." },
+            "ladrillo-20": { nombre: "Sección N° 20", texto: "Desde mi rol apoyo la optimización de los procesos de activos comerciales, para apalancar la estrategia de frío de la compañía." },
+            "ladrillo-21": { nombre: "Sección N° 21", texto: "Desde mi rol aporto y voy más allá de mis responsabilidades y así logro las metas y objetivos. \"Ser para crecer\"." },
+            "ladrillo-22": { nombre: "Sección N° 22", texto: "Logramos que nuestros clientes sientan y vivan lo importante que son para nosotros desde el servicio, la atención y la coherencia. Modelo de atención, frío, pronóstico y demanda." },
+            "ladrillo-23": { nombre: "Sección N° 23", texto: "A través de mi trabajo le hago la vida más fácil a nuestros RV'S y clientes." },
+            "ladrillo-24": { nombre: "Sección N° 24", texto: "Yo gano en la tienda cuando mejoro procesos, haciéndolos más flexibles por medio de la automatización." },
+            "ladrillo-25": { nombre: "Sección N° 25", texto: "Yo gano en la tienda cuando creamos al cliente el mismo día y le podemos vender el mismo día." },
+            "ladrillo-26": { nombre: "Sección N° 26", texto: "Mis ideas se convierten en resultados positivos para lograr el objetivo." },
+            "ladrillo-27": { nombre: "Sección N° 27", texto: "Hago seguimiento diario al comportamiento de mis clientes: cuántos llegan, cuántos se van." },
+            "ladrillo-28": { nombre: "Sección N° 28", texto: "Conecto: Estrategia + impacto + análisis." },
+            "ladrillo-29": { nombre: "Sección N° 29", texto: "Yo gano en la tienda cuando contribuyo con los resultados de mis metas y la de los demás." },
+            "ladrillo-30": { nombre: "Sección N° 30", texto: "Cuando participo y aporto en cada iniciativa que nos permite llegar de manera oportuna y eficiente a cada cliente, a través de procesos claros, vigentes y que traduzcan la realidad de la operación." },
+            "ladrillo-31": { nombre: "Sección N° 31", texto: "Pienso diferente." },
+            "ladrillo-32": { nombre: "Sección N° 32", texto: "Trabajamos inteligentemente integrando y mejorando los procesos con información." },
+            "ladrillo-33": { nombre: "Sección N° 33", texto: "Con bases sólidas, apoyo a que las plataformas sean estables y permitan entregar productos de calidad para el disfrute del cliente final." },
+            "ladrillo-34": { nombre: "Sección N° 34", texto: "Habilito herramientas para que accedan a datos oportunamente y con calidad." },
+            "ladrillo-35": { nombre: "Sección N° 35", texto: "Me comprometo garantizando respuestas oportunas a los requerimientos de los clientes." },
+            "ladrillo-36": { nombre: "Sección N° 36", texto: "Aseguro que todos mis procesos estén tan bien sincronizados que siempre le cumplamos a nuestros clientes a tiempo completo." },
+            "ladrillo-37": { nombre: "Sección N° 37", texto: "Implementamos el plan de lealtad más potente de Postobón habilitando la estrategia COMPAÑÍA y ganando la preferencia del cliente." },
+            "ladrillo-38": { nombre: "Sección N° 38", texto: "Yo gano en la tienda cuando apoyo los procesos." },
+            "ladrillo-39": { nombre: "Sección N° 39", texto: "Nuestros productos llegan a la tienda con la mejor calidad." },
+            "ladrillo-40": { nombre: "Sección N° 40", texto: "El cliente está satisfecho." },
+            "ladrillo-41": { nombre: "Sección N° 41", texto: "Estudio, descubro, aprendo, enseño y trabajo en equipo." },
+            "ladrillo-42": { nombre: "Sección N° 42", texto: "Yo gano en la tienda cuando todos los procesos cargan correctamente y sin errores, manteniendo la data de T.I. actualizada." },
+            "ladrillo-43": { nombre: "Sección N° 43", texto: "Soy resiliente, ágil, empoderado y orientado al logro." },
+            "ladrillo-44": { nombre: "Sección N° 44", texto: "Genero valor día a día, habilitando y enfocado al logro." },
+            "ladrillo-45": { nombre: "Sección N° 45", texto: "Yo gano en la tienda cuando voy un paso adelante del hoy, siempre pensando en el mañana." },
+            "ladrillo-46": { nombre: "Sección N° 46", texto: "Aporto claridad, confianza y resultados visibles desde mi rol y visión como nuevo miembro COE." },
+            "ladrillo-47": { nombre: "Sección N° 47", texto: "Cuando ayudo a redistribuir las capacidades de la compañía, maximizando el ingreso con datos." },
+            "ladrillo-48": { nombre: "Sección N° 48", texto: "Doy mi 100% pensando siempre en hacer mejor y cada vez mejor, cómo hago de mi labor lo mejor para todos." }
+        };
+
+        let bloqueActivoId = null;
+
+        const modal = document.getElementById('modal-bloque');
+        const modalTitulo = document.getElementById('modal-titulo');
+        const modalTexto = document.getElementById('modal-texto-espacio');
+        const btnCerrarModal = document.getElementById('btn-cerrar-modal');
+        const btnCancelarModal = document.getElementById('btn-cancelar-modal');
+        const btnGuardarModal = document.getElementById('btn-guardar-modal');
+
+        const tituloEspacio = document.getElementById('titulo-espacio');
+        const textoEspacio = document.getElementById('texto-espacio');
+        const btnGuardar = document.getElementById('btn-guardar');
+
+        function construirMatrizLadrillos() {
+            const contenedor = document.getElementById('capa-ladrillos');
+            let idNum = 1;
+
+            const w = 62;  
+            const h = 42;  
+            const gapX = 6;
+            const gapY = 6;
+
+            for (let fila = 0; fila < 3; fila++) {
+                const y = 132 + (fila * (h + gapY));
+                for (let col = 0; col < 6; col++) {
+                    const x = 194 + (col * (w + gapX));
+                    if (idNum <= 48) renderizarBloque(contenedor, x, y, w, h, idNum++);
+                }
+            }
+
+            for (let fila = 0; fila < 4; fila++) {
+                const y = 276 + (fila * (h + gapY));
+                for (let col = 0; col < 2; col++) {
+                    const x = 194 + (col * (w + gapX));
+                    if (idNum <= 48) renderizarBloque(contenedor, x, y, w, h, idNum++);
+                }
+                for (let col = 0; col < 2; col++) {
+                    const x = 460 + (col * (w + gapX));
+                    if (idNum <= 48) renderizarBloque(contenedor, x, y, w, h, idNum++);
+                }
+            }
+            actualizarContador();
+        }
+
+        function renderizarBloque(parent, x, y, w, h, id) {
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", x);
+            rect.setAttribute("y", y);
+            rect.setAttribute("width", w);
+            rect.setAttribute("height", h);
+            rect.setAttribute("rx", "3"); 
+            rect.setAttribute("class", "ladrillo");
+            rect.setAttribute("id", `ladrillo-${id}`);
+            rect.addEventListener('click', () => abrirManejadorBloque(`ladrillo-${id}`));
+
+            const texto = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            texto.setAttribute("x", x + (w / 2));
+            texto.setAttribute("y", y + (h / 2));
+            texto.setAttribute("class", "ladrillo-texto");
+            texto.textContent = id;
+
+            g.appendChild(rect);
+            g.appendChild(texto);
+            parent.appendChild(g);
+        }
+
+        function abrirManejadorBloque(id) {
+            if (bloqueActivoId) {
+                const anterior = document.getElementById(bloqueActivoId);
+                if (anterior) anterior.classList.remove('activo');
+            }
+
+            bloqueActivoId = id;
+            document.getElementById(id).classList.add('activo');
+
+            textoEspacio.disabled = false;
+            btnGuardar.disabled = false;
+            tituloEspacio.innerText = datosFachada[id].nombre;
+            textoEspacio.value = datosFachada[id].texto;
+
+            modalTitulo.innerText = datosFachada[id].nombre;
+            modalTexto.value = datosFachada[id].texto;
+            modal.classList.add('open');
+            setTimeout(() => modalTexto.focus(), 100);
+        }
+
+        function guardarInformacion(textoA_Guardar) {
+            if (bloqueActivoId) {
+                datosFachada[bloqueActivoId].texto = textoA_Guardar;
+                textoEspacio.value = textoA_Guardar;
+                modalTexto.value = textoA_Guardar;
+                actualizarContador();
+            }
+        }
+
+        btnGuardar.addEventListener('click', () => {
+            guardarInformacion(textoEspacio.value);
+            alert(`¡Texto actualizado temporalmente!`);
+        });
+
+        btnGuardarModal.addEventListener('click', () => {
+            guardarInformacion(modalTexto.value);
+            cerrarModal();
+        });
+
+        function cerrarModal() {
+            modal.classList.remove('open');
+        }
+
+        btnCerrarModal.addEventListener('click', cerrarModal);
+        btnCancelarModal.addEventListener('click', cerrarModal);
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModal();
+        });
+
+        function actualizarContador() {
+            const guardados = Object.values(datosFachada).filter(item => item.texto.trim() !== "").length;
+            document.getElementById('contador-progreso').innerText = `Secciones completadas: ${guardados} / 48`;
+        }
+
+        construirMatrizLadrillos();
+    </script>
+</body>
+</html>
